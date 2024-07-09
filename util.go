@@ -18,11 +18,6 @@ func Stopping() error {
 	return SdNotify("STOPPING=1")
 }
 
-// Reloading sends RELOADING=1 to the systemd notify socket.
-func Reloading() error {
-	return SdNotify("RELOADING=1")
-}
-
 // Errno sends ERRNO=? to the systemd notify socket.
 func Errno(errno int) error {
 	return SdNotify(fmt.Sprintf("ERRNO=%d", errno))
