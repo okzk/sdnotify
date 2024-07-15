@@ -4,18 +4,9 @@ import (
 	"fmt"
 	"net"
 	"os"
-)
 
-/*
-#include <time.h>
-static unsigned long long get_nsecs(void)
-{
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (unsigned long long)ts.tv_sec * 1000000000UL + ts.tv_nsec;
-}
-*/
-import "C"
+	"golang.org/x/sys/unix"
+)
 
 // SdNotify sends a specified string to the systemd notification socket.
 func SdNotify(state string) error {
@@ -34,9 +25,14 @@ func SdNotify(state string) error {
 	return err
 }
 
-// Reloading sends RELOADING=1\nMONOTONIC_USEC=<monotonic_time> to the 
+// Reloading sends RELOADING=1\nMONOTONIC_USEC=<monotonic_time> to the
 // systemd notify socket.
 func Reloading() error {
+	var ts unix.Timespec
+	if err := unix.ClockGettime(unix.CLOCK_MONOTONIC, &ts); err != nil {
+		return fmt.Errorf("getting monotonic time: %w", err)
+	}
+	nsecs := ts.Sec*1e09 + ts.Nsec
 	return SdNotify(fmt.Sprintf("RELOADING=1\nMONOTONIC_USEC=%d",
-			C.get_nsecs() / 1000))
+		nsecs/1000))
 }
